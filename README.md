@@ -36,28 +36,34 @@ A beautiful, theme-aware, Quake-style drop-down To-Do list plugin for [Omarchy](
 
 ## Installation
 
-### Method 1: Using `omarchy plugin`
+### Quick Install (Recommended)
+
+Clone the repository and run the install script:
 
 ```bash
-omarchy plugin add <repo-url> --enable --yes
+git clone https://github.com/CipherSar/omarchy-todo.git
+cd omarchy-todo
+./install.sh
 ```
 
-### Method 2: Manual Installation
+The install script automatically:
+1. Validates and installs plugin files into `~/.config/omarchy/plugins/ciphersar.todo/`
+2. Installs the `omarchy-todo` CLI helper into `~/.local/bin/omarchy-todo`
+3. Registers and enables the plugin in `omarchy-shell`
+4. Adds the `SUPER + ALT + T` keybinding to `~/.config/hypr/bindings.lua` (if not already set)
+5. Sets up the persistent data storage file
 
-Clone into your Omarchy user plugins folder:
+#### Install Options
 
 ```bash
-git clone <repo-url> ~/.config/omarchy/plugins/ciphersar.todo
-omarchy-shell shell rescanPlugins
-omarchy plugin enable ciphersar.todo
+./install.sh --no-keybind   # Install plugin & CLI without modifying keybindings
+./install.sh --uninstall    # Cleanly remove plugin, CLI helper, and disable from shell
 ```
 
-### Install CLI Helper
+### Alternative: Using `omarchy plugin`
 
 ```bash
-mkdir -p ~/.local/bin
-cp bin/omarchy-todo ~/.local/bin/omarchy-todo
-chmod +x ~/.local/bin/omarchy-todo
+omarchy plugin add https://github.com/CipherSar/omarchy-todo.git --enable --yes
 ```
 
 ---
