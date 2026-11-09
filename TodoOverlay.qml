@@ -46,7 +46,16 @@ Item {
     root.opened = true
     root.animatingClose = false
     var payload = ({})
-    try { payload = JSON.parse(payloadJson || "{}") } catch (e) { payload = ({}) }
+    try {
+      if (typeof payloadJson === "string" && (payloadJson.trim() === "history" || payloadJson.trim() === "todo")) {
+        payload = { tab: payloadJson.trim() }
+      } else {
+        payload = JSON.parse(payloadJson || "{}")
+      }
+    } catch (e) {
+      if (payloadJson === "history" || payloadJson === "todo") payload = { tab: payloadJson }
+      else payload = ({})
+    }
     if (payload.tab) root.currentTab = payload.tab
     root.rebuildDisplay()
     Qt.callLater(function() {

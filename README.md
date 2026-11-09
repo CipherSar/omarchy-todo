@@ -2,7 +2,11 @@
 
 A beautiful, theme-aware, Quake-style drop-down To-Do list plugin for [Omarchy](https://omarchy.org/) Linux and Hyprland.
 
-![To-Do Plugin Screenshot](assets/screenshot.png)
+### To-Do Tab
+![To-Do Tab](assets/todo-tab.png)
+
+### History Tab
+![History Tab](assets/history-tab.png)
 
 ## Features
 

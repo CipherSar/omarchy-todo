@@ -13,11 +13,13 @@ case "$cmd" in
   toggle)
     omarchy-shell shell toggle ciphersar.todo "{}"
     ;;
-  open|show|summon)
-    omarchy-shell shell summon ciphersar.todo "{}"
+  open|show|summon|todo)
+    omarchy-shell shell summon ciphersar.todo '{"tab":"todo"}'
+    omarchy-shell shell call ciphersar.todo switchTab todo >/dev/null 2>&1 || true
     ;;
   history)
     omarchy-shell shell summon ciphersar.todo '{"tab":"history"}'
+    omarchy-shell shell call ciphersar.todo switchTab history >/dev/null 2>&1 || true
     ;;
   close|hide)
     omarchy-shell shell hide ciphersar.todo
