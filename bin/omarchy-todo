@@ -1,0 +1,65 @@
+#!/bin/bash
+# omarchy-todo: CLI and summon helper for Omarchy To-Do List Plugin
+
+set -euo pipefail
+
+STORAGE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/todo-items.json"
+mkdir -p "$(dirname "$STORAGE_FILE")"
+[[ -f "$STORAGE_FILE" ]] || echo "[]" > "$STORAGE_FILE"
+
+cmd="${1:-toggle}"
+
+case "$cmd" in
+  toggle)
+    omarchy-shell shell toggle ciphersar.todo "{}"
+    ;;
+  open|show|summon)
+    omarchy-shell shell summon ciphersar.todo "{}"
+    ;;
+  history)
+    omarchy-shell shell summon ciphersar.todo '{"tab":"history"}'
+    ;;
+  close|hide)
+    omarchy-shell shell hide ciphersar.todo
+    ;;
+  add)
+    shift
+    task="$*"
+    if [[ -z "$task" ]]; then
+      echo "Usage: omarchy-todo add <task description>" >&2
+      exit 1
+    fi
+    now_ms=$(date +%s%3N)
+    new_id="todo_${now_ms}_$RANDOM"
+    tmp_file=$(mktemp)
+    jq --arg id "$new_id" --arg text "$task" --argjson now "$now_ms" '
+      [{ id: $id, text: $text, completed: false, createdAt: $now, completedAt: null }] + .
+    ' "$STORAGE_FILE" > "$tmp_file" && mv "$tmp_file" "$STORAGE_FILE"
+    echo "Added to-do: $task"
+    ;;
+  list)
+    jq -r '.[] | select(.completed == false) | "- [ ] \(.text)"' "$STORAGE_FILE"
+    ;;
+  -h|--help|help)
+    cat <<EOF
+Usage: omarchy-todo [command]
+
+Commands:
+  toggle          Toggle Quake-style drop-down console (default)
+  open            Open Quake-style drop-down console
+  close           Close drop-down console
+  history         Open drop-down console to History tab
+  add <text>      Add a new to-do item directly from CLI
+  list            List active to-dos
+  help            Show this help message
+EOF
+    ;;
+  *)
+    # Treat arbitrary argument as task to add if more than one word or toggle
+    if (( $# > 1 )); then
+      "$0" add "$@"
+    else
+      omarchy-shell shell toggle ciphersar.todo "{}"
+    fi
+    ;;
+esac

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "ciphersar.todo",
+  "name": "To-Do List",
+  "version": "1.0.0",
+  "author": "CipherSar",
+  "description": "Quake-style drop-down To-Do list with history and date organization",
+  "kinds": [
+    "overlay"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "overlay": "TodoOverlay.qml"
+  }
+}
