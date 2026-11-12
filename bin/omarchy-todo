@@ -3,9 +3,25 @@
 
 set -euo pipefail
 
-STORAGE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/todo-items.json"
-mkdir -p "$(dirname "$STORAGE_FILE")"
-[[ -f "$STORAGE_FILE" ]] || echo "[]" > "$STORAGE_FILE"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/todo"
+STORAGE_FILE="$STATE_DIR/todo-items.json"
+LEGACY_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/todo-items.json"
+
+(
+  umask 077
+  mkdir -p "$STATE_DIR"
+  chmod 700 "$STATE_DIR"
+  if [[ ! -f "$STORAGE_FILE" && -f "$LEGACY_FILE" ]]; then
+    cp -f "$LEGACY_FILE" "$STORAGE_FILE" 2>/dev/null || true
+  fi
+  if [[ ! -f "$STORAGE_FILE" ]]; then
+    echo "[]" > "$STORAGE_FILE"
+  fi
+  chmod 600 "$STORAGE_FILE" 2>/dev/null || true
+  if [[ -f "$LEGACY_FILE" ]]; then
+    chmod 600 "$LEGACY_FILE" 2>/dev/null || true
+  fi
+)
 
 cmd="${1:-toggle}"
 
@@ -33,10 +49,12 @@ case "$cmd" in
     fi
     now_ms=$(date +%s%3N)
     new_id="todo_${now_ms}_$RANDOM"
-    tmp_file=$(mktemp)
+    tmp_file=$(mktemp "$STATE_DIR/.tmp.XXXXXX")
+    chmod 600 "$tmp_file"
     jq --arg id "$new_id" --arg text "$task" --argjson now "$now_ms" '
       [{ id: $id, text: $text, completed: false, createdAt: $now, completedAt: null }] + .
-    ' "$STORAGE_FILE" > "$tmp_file" && mv "$tmp_file" "$STORAGE_FILE"
+    ' "$STORAGE_FILE" > "$tmp_file" && mv -f "$tmp_file" "$STORAGE_FILE"
+    chmod 600 "$STORAGE_FILE"
     echo "Added to-do: $task"
     ;;
   list)

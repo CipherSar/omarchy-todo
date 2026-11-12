@@ -20,7 +20,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ID="ciphersar.todo"
 PLUGINS_DEST="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/$PLUGIN_ID"
 BIN_DEST="${HOME}/.local/bin"
-STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/todo"
+STATE_FILE="$STATE_DIR/todo-items.json"
+LEGACY_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/todo-items.json"
 BINDINGS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/bindings.lua"
 
 ADD_KEYBINDING=true
@@ -115,11 +117,23 @@ mkdir -p "$BIN_DEST"
 cp -f "$SCRIPT_DIR/bin/omarchy-todo" "$BIN_DEST/omarchy-todo"
 chmod +x "$BIN_DEST/omarchy-todo"
 
-# 5. Ensure data storage file exists
-mkdir -p "$STATE_DIR"
-if [[ ! -f "$STATE_DIR/todo-items.json" ]]; then
-  echo "[]" > "$STATE_DIR/todo-items.json"
-fi
+# 5. Ensure private data storage directory and file exist with 0700/0600 permissions
+echo "Setting up private task storage ($STATE_DIR)..."
+(
+  umask 077
+  mkdir -p "$STATE_DIR"
+  chmod 700 "$STATE_DIR"
+  if [[ ! -f "$STATE_FILE" && -f "$LEGACY_FILE" ]]; then
+    cp -f "$LEGACY_FILE" "$STATE_FILE"
+  fi
+  if [[ ! -f "$STATE_FILE" ]]; then
+    echo "[]" > "$STATE_FILE"
+  fi
+  chmod 600 "$STATE_FILE"
+  if [[ -f "$LEGACY_FILE" ]]; then
+    chmod 600 "$LEGACY_FILE"
+  fi
+)
 
 # 6. Rescan plugins and enable in omarchy-shell
 if command -v omarchy-shell >/dev/null 2>&1; then

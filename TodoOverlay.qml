@@ -23,7 +23,10 @@ Item {
   readonly property int todoCount: TodoModel.countActive(root.items)
   readonly property int historyCount: TodoModel.countCompleted(root.items)
 
-  property string storagePath: Quickshell.env("HOME") + "/.local/state/omarchy/todo-items.json"
+  property string stateDir: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/omarchy/todo"
+  property string storagePath: root.stateDir + "/todo-items.json"
+  property string legacyPath: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/omarchy/todo-items.json"
+  property bool storeReady: false
 
   // Theme-aware palette matching the Omarchy shell
   property color background: Commons.Color.menu.background
@@ -91,6 +94,7 @@ Item {
   }
 
   function saveData() {
+    if (!root.storeReady) return
     dataFile.setText(JSON.stringify(root.items, null, 2) + "\n")
   }
 
@@ -152,9 +156,29 @@ Item {
     id: displayModel
   }
 
+  // Ensure private 0700 storage directory and 0600 storage file exist
+  // before FileView reads or writes it, preventing exposure to other local users.
+  Process {
+    id: storePrepare
+    command: ["bash", "-c",
+      "umask 077\n" +
+      "dir=$1\n" +
+      "file=$2\n" +
+      "legacy=$3\n" +
+      "mkdir -p -- \"$dir\" && chmod 700 -- \"$dir\" || exit 1\n" +
+      "if [[ -L $file ]]; then rm -f -- \"$file\"; fi\n" +
+      "if [[ ! -e $file && -f $legacy ]]; then cp -f -- \"$legacy\" \"$file\" 2>/dev/null || true; fi\n" +
+      "if [[ -f $file ]]; then chmod 600 -- \"$file\"; elif [[ ! -e $file ]]; then echo '[]' >\"$file\" && chmod 600 -- \"$file\"; fi\n" +
+      "if [[ -f $legacy ]]; then chmod 600 -- \"$legacy\" 2>/dev/null || true; fi\n",
+      "omarchy-todo-state", root.stateDir, root.storagePath, root.legacyPath]
+    onExited: function(code) { root.storeReady = code === 0 }
+  }
+
+  Component.onCompleted: storePrepare.running = true
+
   FileView {
     id: dataFile
-    path: root.storagePath
+    path: root.storeReady ? root.storagePath : ""
     watchChanges: true
     atomicWrites: true
     printErrors: false

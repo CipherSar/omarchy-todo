@@ -115,13 +115,16 @@ o.bind("SUPER + ALT + T", "To-Do list", "omarchy-todo")
 
 ---
 
-## Data Storage
+## Data Storage & Privacy
 
-Tasks and completion history are stored in clean JSON format at:
+Tasks and completion history are stored in a private directory with restricted permissions:
 ```
-~/.local/state/omarchy/todo-items.json
+~/.local/state/omarchy/todo/todo-items.json
 ```
-Atomic writes ensure data safety across system reboots and shell reloads.
+- The directory is created with `0700` (`drwx------`) mode.
+- The storage file is maintained with `0600` (`-rw-------`) mode.
+- Atomic writes preserve permissions and prevent data corruption.
+- Any legacy `~/.local/state/omarchy/todo-items.json` file is automatically migrated and secured.
 
 ---
 
