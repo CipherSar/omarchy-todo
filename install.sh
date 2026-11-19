@@ -105,11 +105,21 @@ if command -v omarchy-plugin-validate >/dev/null 2>&1; then
 fi
 
 # 3. Create destination and copy plugin files
-echo "Installing plugin files to $PLUGINS_DEST..."
+# When the repository was installed by `omarchy plugin add`, it already lives at
+# $PLUGINS_DEST. Copying a file onto itself makes `cp` fail, and `set -e` would
+# abort the install before the CLI helper and the keybinding are set up.
 mkdir -p "$PLUGINS_DEST"
-cp -f "$SCRIPT_DIR/manifest.json" "$PLUGINS_DEST/"
-cp -f "$SCRIPT_DIR/TodoModel.js" "$PLUGINS_DEST/"
-cp -f "$SCRIPT_DIR/TodoOverlay.qml" "$PLUGINS_DEST/"
+SCRIPT_DIR_REAL="$(cd "$SCRIPT_DIR" && pwd -P)"
+PLUGINS_DEST_REAL="$(cd "$PLUGINS_DEST" && pwd -P)"
+
+if [[ "$SCRIPT_DIR_REAL" == "$PLUGINS_DEST_REAL" ]]; then
+  echo "Plugin files are already in place at $PLUGINS_DEST, skipping copy..."
+else
+  echo "Installing plugin files to $PLUGINS_DEST..."
+  cp -f "$SCRIPT_DIR/manifest.json" "$PLUGINS_DEST/"
+  cp -f "$SCRIPT_DIR/TodoModel.js" "$PLUGINS_DEST/"
+  cp -f "$SCRIPT_DIR/TodoOverlay.qml" "$PLUGINS_DEST/"
+fi
 
 # 4. Install CLI script
 echo "Installing CLI helper to $BIN_DEST/omarchy-todo..."
