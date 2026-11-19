@@ -64,6 +64,16 @@ The install script automatically:
 
 ```bash
 omarchy plugin add https://github.com/CipherSar/omarchy-todo.git --enable --yes
+~/.config/omarchy/plugins/ciphersar.todo/bin/install
+```
+
+`omarchy plugin add` only clones and enables the overlay; it does not run the
+install script. Without the second command the `omarchy-todo` CLI and the
+`SUPER + ALT + T` keybinding are never installed, so the only way to open the
+console is:
+
+```bash
+omarchy-shell shell toggle ciphersar.todo
 ```
 
 ---
